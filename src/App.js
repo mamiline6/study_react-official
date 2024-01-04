@@ -38,8 +38,9 @@ function Board({ xIsNext, squares, onPlay }) {
     // setXIsNext(!xIsNext);                // 先手・後手の更新：手は交互に変わるため、自分（true/false）とは逆の値に設定を更新する
   }
 
-  const winner = calculateWinner(squares);
+  const winner = calculateWinner(squares); // 配列を勝ち条件の判定用メソッドに渡して、結果をもつ
   let status;
+  // 結果に値がある場合、その値が勝者。値がない場合、次のプレイヤーを表示してゲームを続ける
   if (winner) {
     status = "Winner: " + winner;
   } else {
@@ -48,7 +49,7 @@ function Board({ xIsNext, squares, onPlay }) {
 
   return(
     <>
-      <div className="status">{status}</div>
+      <div className="status">{ status }</div>
       <div className="board-row">
         <Square value={squares[0]} onSquareClick={() => handleClick(0)} />
         <Square value={squares[1]} onSquareClick={() => handleClick(1)} />
@@ -72,18 +73,23 @@ function Board({ xIsNext, squares, onPlay }) {
 export default function Game() {
   const [xIsNext, setXIsNext] = useState(true); // 次の手を設定・更新する変数 xIsNext を定義する（初期値 true）
   const [history, setHistory] = useState([Array(9).fill(null)]); // Board からリフトアップした（1試合1手毎に Square 配列の履歴が入る。9手分）
-  const currentSquares = history[history.length - 1];
+  const [currentMove, setCurrentMove] = useState(0);
+  const currentSquares = history[currentMove];
 
   function handlePlay(nextSquares) {
-    setHistory([...history, nextSquares]);
+    const nextHistory = [...history.slice(0, currentMove + 1), nextSquares];
+    setHistory(nextHistory);
+    setCurrentMove(nextHistory.length - 1);
     setXIsNext(!xIsNext);
   }
 
   function jumpTo(nextMove) {
-    // TODO
+    setCurrentMove(nextMove);
+    setXIsNext(nextMove % 2 === 0);
   }
 
   const moves = history.map((squares, move) => {
+    // console.log(history); // 配列 history 勝敗がつくまでの履歴
     let description;
     if(move > 0) {
       description = "Go to move #" + move;
@@ -91,7 +97,7 @@ export default function Game() {
       description = "Go to game start";
     }
     return (
-      <li>
+      <li key={move}>
         <button onClick={() => jumpTo(move)}>{ description }</button>
       </li>
     );
@@ -104,7 +110,7 @@ export default function Game() {
         <Board xIsNext={xIsNext} squares={currentSquares} onPlay={handlePlay} />
       </div>
       <div className="game-info">
-        <ol>{moves}</ol>
+        <ol>{ moves }</ol>
       </div>
     </div>
   );
